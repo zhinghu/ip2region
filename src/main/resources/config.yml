@@ -8,6 +8,10 @@ unknown: "未知"
 
 local: "内网IP"
 
+# 自定义变量值转换，仅完整匹配获取到的单个值
+valueMapping:
+  Tokyo: "东京"
+
 # 数据来源 自己选择一个最准确的即可
 # offline 本地数据源模式(支持ipv4/ipv6 百分之99.9数据准确性)
 # ipPlus360 在线api模式(支持ipv4/ipv6 付费 必需先购买key填下面)

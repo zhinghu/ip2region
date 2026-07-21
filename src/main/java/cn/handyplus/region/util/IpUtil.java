@@ -2,6 +2,7 @@ package cn.handyplus.region.util;
 
 import cn.handyplus.lib.constants.BaseConstants;
 import cn.handyplus.lib.core.StrUtil;
+import cn.handyplus.lib.util.HandyConfigUtil;
 import cn.handyplus.region.constants.BaseIpConstants;
 import cn.handyplus.region.constants.IpGetTypeEnum;
 import lombok.SneakyThrows;
@@ -13,6 +14,7 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Map;
 
 /**
  * 获取ip地址
@@ -49,6 +51,11 @@ public class IpUtil {
         if (IpGetTypeEnum.VORE_API.getIpGetType().equalsIgnoreCase(dataSource)) {
             VoreApiUtil.getPlayerRegion(player);
         }
+        String region = convertRegion(BaseIpConstants.PLAYER_REGION_MAP.get(player.getUniqueId()));
+        if (StrUtil.isEmpty(region)) {
+            return;
+        }
+        BaseIpConstants.PLAYER_REGION_MAP.put(player.getUniqueId(), region);
     }
 
     /**
@@ -59,27 +66,47 @@ public class IpUtil {
      */
     public static String getIpRegion(String ip) {
         String dataSource = BaseConstants.CONFIG.getString("dataSource", IpGetTypeEnum.OFFLINE.getIpGetType());
+        String region = null;
         // 离线模式
         if (IpGetTypeEnum.OFFLINE.getIpGetType().equalsIgnoreCase(dataSource)) {
-            return SearcherUtil.getIpRegion(ip);
+            region = SearcherUtil.getIpRegion(ip);
         }
         // 请求 ipPlus360 模式
         if (IpGetTypeEnum.IP_PLUS_360.getIpGetType().equalsIgnoreCase(dataSource)) {
-            return IpPlus360Util.getIpRegion(ip, null);
+            region = IpPlus360Util.getIpRegion(ip, null);
         }
         // 请求 ipApi 模式
         if (IpGetTypeEnum.IP_API.getIpGetType().equalsIgnoreCase(dataSource)) {
-            return IpApiUtil.getIpRegion(ip);
+            region = IpApiUtil.getIpRegion(ip);
         }
         // 请求 whois 模式
         if (IpGetTypeEnum.WHOIS.getIpGetType().equalsIgnoreCase(dataSource)) {
-            return WhoisUtil.getIpRegion(ip);
+            region = WhoisUtil.getIpRegion(ip);
         }
         // 请求 voreApi 模式
         if (IpGetTypeEnum.VORE_API.getIpGetType().equalsIgnoreCase(dataSource)) {
-            return VoreApiUtil.getIpRegion(ip);
+            region = VoreApiUtil.getIpRegion(ip);
         }
-        return null;
+        return convertRegion(region);
+    }
+
+    /**
+     * 转换地区格式
+     *
+     * @param region 地区
+     * @return 转换后的地区
+     */
+    private static String convertRegion(String region) {
+        if (StrUtil.isEmpty(region)) {
+            return region;
+        }
+        Map<String, Object> valueMapping = HandyConfigUtil.getChildMap(BaseConstants.CONFIG, "valueMapping");
+        String[] values = region.split("\\|", -1);
+        for (int i = 0; i < values.length; i++) {
+            Object mappedValue = valueMapping.get(values[i]);
+            values[i] = mappedValue == null ? values[i] : String.valueOf(mappedValue);
+        }
+        return String.join("|", values);
     }
 
     /**
